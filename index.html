@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ig0 Proxy (Frameless)</title>
+    <title>ig0 Proxy (Advanced Bypass)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -15,15 +15,14 @@
         }
         .fade-in { animation: fadeIn 0.5s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        /* Style for the content injection area */
-        .content-display {
-            min-height: calc(100vh - 120px); /* Use min-height as content length varies */
+        /* Style the content frame */
+        #contentFrame {
+            width: 100%;
+            height: calc(100vh - 120px); /* Adjusted for top controls */
             border: 1px solid #ccc;
             background-color: #fff;
-            padding: 1rem; 
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            overflow: auto; /* Essential for scrolling the loaded page */
+            transition: height 0.3s ease;
         }
         /* Custom glow effect for button (monochrome glow) */
         .btn-glow {
@@ -40,17 +39,15 @@
         .btn-neutral:hover {
             background-color: #555;
         }
-        /* Fullscreen mode for the content container */
-        .fullscreen-container {
+        .fullscreen-frame {
+             height: 100vh !important;
              position: fixed;
              top: 0;
              left: 0;
-             width: 100vw !important; 
-             height: 100vh !important;
              z-index: 1000;
              margin: 0;
              padding: 0;
-             box-sizing: border-box;
+             width: 100vw !important; 
         }
     </style>
 </head>
@@ -69,30 +66,30 @@
                 <label for="urlInput" class="block text-lg font-semibold text-neutral-800">Enter Target URL:</label>
                 <input type="url" id="urlInput" placeholder="e.g., https://www.google.com" required
                        class="w-full p-4 border border-neutral-300 rounded-lg focus:ring-neutral-500 focus:border-neutral-500 text-neutral-800 transition duration-150 ease-in-out"
-                       onkeydown="if(event.key === 'Enter') startProxy()">
+                       onkeydown="if(event.key === 'Enter') launchInBlank()">
             </div>
 
-            <!-- Action Buttons Row 1 -->
+            <!-- Action Buttons Row 1: The New Default is the Advanced Bypass -->
             <div class="flex flex-col md:flex-row gap-4">
-                <button onclick="startProxy()" id="proxyButton"
+                <button onclick="launchInBlank()" id="proxyButton"
                         class="flex-1 p-4 font-bold rounded-lg shadow-lg focus:outline-none focus:ring-4 focus:ring-neutral-500 focus:ring-opacity-50 btn-glow transition duration-150 btn-neutral">
-                    Go! (Load Frameless)
+                    Go! (Launch in Blank Window)
                 </button>
-                <button onclick="clearContent()" id="clearButton"
+                <button onclick="startProxy()" id="loadFrameButton"
                         class="p-4 bg-neutral-200 text-neutral-700 font-bold rounded-lg hover:bg-neutral-300 focus:outline-none focus:ring-4 focus:ring-neutral-400 focus:ring-opacity-50 transition duration-150">
-                    Clear Content
+                    Load in Frame (Testing)
                 </button>
             </div>
 
-            <!-- Action Buttons Row 2 (New) -->
+            <!-- Action Buttons Row 2 -->
             <div class="flex flex-col md:flex-row gap-4">
                 <button onclick="toggleFullscreen()" id="fullscreenButton"
                         class="flex-1 p-3 bg-neutral-500 text-white font-bold rounded-lg hover:bg-neutral-600 transition duration-150">
-                    Toggle Fullscreen
+                    Toggle Frame Fullscreen
                 </button>
-                 <button onclick="launchInBlank()" id="launchBlankButton"
+                 <button onclick="clearFrame()" id="clearButton"
                         class="flex-1 p-3 bg-neutral-500 text-white font-bold rounded-lg hover:bg-neutral-600 transition duration-150">
-                    Launch in about:blank
+                    Clear Frame
                 </button>
             </div>
             
@@ -108,18 +105,19 @@
         </main>
     </div>
 
-    <!-- Content Display Area (where the proxied website loads) -->
-    <div id="contentContainer" class="mt-8 hidden max-w-4xl mx-auto content-display">
-        <!-- Proxied HTML will be injected here via fetch -->
+    <!-- Content Frame Area (where the proxied website loads for testing) -->
+    <div id="frame-container" class="mt-8 hidden max-w-4xl mx-auto">
+        <!-- CRUCIAL: Initialize with about:blank to bypass simple iframe filters -->
+        <iframe id="contentFrame" title="Proxied Content" src="about:blank"></iframe>
     </div>
 
     <script>
         const urlInput = document.getElementById('urlInput');
         const messageBox = document.getElementById('messageBox');
         const loadingIndicator = document.getElementById('loadingIndicator');
+        const frameContainer = document.getElementById('frame-container');
+        const contentFrame = document.getElementById('contentFrame'); 
         const mainUi = document.getElementById('main-ui');
-        // NEW target for content injection:
-        const contentContainer = document.getElementById('contentContainer'); 
 
         // --- WORKER DEPLOYMENT CHANGE START ---
         const proxyBaseUrl = 'https://time.alansanti2248.workers.dev'; 
@@ -142,7 +140,7 @@
             return url;
         }
 
-        // Function to start the proxy loading process (NOW USES FETCH)
+        // Renamed/modified for clarity: Loads in the visible iframe on the current page
         async function startProxy() {
             messageBox.classList.add('hidden');
             let url = urlInput.value.trim();
@@ -152,67 +150,52 @@
                 return;
             }
             
-            if (proxyBaseUrl === 'https://YOUR-WORKER-NAME.workers.dev') {
+            if (proxyBaseUrl.includes('YOUR-WORKER-NAME')) {
                  showMessage("Error: The Worker URL is still a placeholder. Please replace 'https://YOUR-WORKER-NAME.workers.dev' in the JavaScript with your actual deployed Worker URL.", true);
                  return;
             }
 
             url = normalizeUrl(url);
 
-            // Show loading and hide content container
+            // Show loading
             loadingIndicator.classList.remove('hidden');
-            contentContainer.classList.add('hidden');
-            contentContainer.innerHTML = '';
             
-            // Construct the full URL for the Worker fetch call
+            // Construct the full URL using the deployed Worker URL
             const proxyUrl = `${proxyBaseUrl}/?target=${encodeURIComponent(url)}`;
             
-            try {
-                const response = await fetch(proxyUrl);
-                
-                if (!response.ok) {
-                    throw new Error(`Proxy failed with status: ${response.status}`);
-                }
-                
-                const htmlContent = await response.text();
-                
-                // Inject the received HTML directly into the container
-                contentContainer.innerHTML = htmlContent;
-                contentContainer.classList.remove('hidden');
-                
-                showMessage(`Successfully loaded proxied content: ${url}`, false);
+            // Set the iframe source dynamically
+            contentFrame.src = proxyUrl;
+            frameContainer.classList.remove('hidden');
 
-            } catch (error) {
-                // Display error message inside the container
-                contentContainer.innerHTML = `<div class="p-8 text-center text-red-700">Failed to load content. Error: ${error.message}. The site might be blocking the Worker.</div>`;
-                contentContainer.classList.remove('hidden');
-                showMessage(`Loading failed: ${error.message}`, true);
-            } finally {
+            // Hide loading indicator once frame starts loading 
+            setTimeout(() => {
                 loadingIndicator.classList.add('hidden');
-            }
+            }, 1000); 
+
+            showMessage(`Attempting to load proxied URL in current frame: ${url}`, false);
         }
 
-        // Function to clear the content
-        function clearContent() {
-            contentContainer.innerHTML = ""; // Clears the content
-            contentContainer.classList.add('hidden');
-            contentContainer.classList.remove('fullscreen-container');
+        // Function to clear the frame content
+        function clearFrame() {
+            contentFrame.src = "about:blank"; // Clears the content
+            frameContainer.classList.add('hidden');
+            contentFrame.classList.remove('fullscreen-frame');
             mainUi.style.display = 'block'; // Ensure main UI is visible
             urlInput.value = '';
             messageBox.classList.add('hidden');
-            showMessage("Content cleared. Ready for a new URL.", false);
+            showMessage("Frame cleared. Ready for a new URL.", false);
         }
 
-        // Function to toggle fullscreen mode (now targets contentContainer)
+        // Function to toggle iframe fullscreen mode
         function toggleFullscreen() {
-            if (contentContainer.classList.contains('hidden')) {
+            if (frameContainer.classList.contains('hidden')) {
                 showMessage("Please load a URL before toggling fullscreen.", true);
                 return;
             }
 
-            contentContainer.classList.toggle('fullscreen-container');
+            contentFrame.classList.toggle('fullscreen-frame');
             
-            if (contentContainer.classList.contains('fullscreen-container')) {
+            if (contentFrame.classList.contains('fullscreen-frame')) {
                 mainUi.style.display = 'none'; // Hide the main UI controls
                 showMessage("Fullscreen mode enabled.", false);
             } else {
@@ -221,7 +204,7 @@
             }
         }
 
-        // Function to launch the proxied content via the about:blank trick (remains the same)
+        // The most effective bypass method: Opens in a clean, separate window.
         function launchInBlank() {
             let url = urlInput.value.trim();
 
@@ -235,19 +218,21 @@
             
             const newWindow = window.open('about:blank', '_blank');
             if (newWindow) {
+                // We use a blank HTML structure and dynamically inject an iframe
+                // This keeps the proxy URL out of the original window's history/logs
                 newWindow.document.write(`
                     <!DOCTYPE html>
                     <html style="margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%;">
                     <head><title>Loading Proxy...</title></head>
                     <body style="margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%;">
-                        <!-- Still uses iframe inside the new window for isolation -->
+                        <!-- iframe is now only inside the new, isolated window -->
                         <iframe src="${proxyUrl}" style="width: 100%; height: 100%; border: none; margin: 0; padding: 0;"></iframe>
                     </body>
                     </html>
                 `);
                 newWindow.document.close();
-                showMessage(`Launched in new about:blank window/tab: ${url}`, false);
-                clearContent(); 
+                showMessage(`Launched in new window: ${url}`, false);
+                clearFrame(); 
             } else {
                 showMessage("Could not open new window. Check your browser's pop-up blocker.", true);
             }
