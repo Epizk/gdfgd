@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ig0 Proxy (Advanced Bypass)</title>
+    <title>ig0 prox</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -15,40 +15,42 @@
         }
         .fade-in { animation: fadeIn 0.5s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        /* Style the content frame */
-        #contentFrame {
-            width: 100%;
-            height: calc(100vh - 120px); /* Adjusted for top controls */
-            border: 1px solid #ccc;
-            background-color: #fff;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            transition: height 0.3s ease;
+        /* Tab Bar Styling */
+        #tabBar {
+            display: flex;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #ddd;
+        }
+        .tab-button {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            margin-right: 4px;
+            background-color: #e5e7eb;
+            color: #333;
+            border-radius: 6px 6px 0 0;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.15s;
+        }
+        .tab-button:hover {
+            background-color: #d1d5db;
+        }
+        .tab-close {
+            margin-left: 8px;
+            font-weight: bold;
+            color: #777;
+        }
+        .tab-close:hover {
+            color: #000;
         }
         /* Custom glow effect for button (monochrome glow) */
-        .btn-glow {
-            transition: all 0.3s ease;
-        }
-        .btn-glow:hover {
-            box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.5); /* Darker gray glow */
-        }
-        .btn-neutral {
-            background-color: #333;
-            color: white;
-            border: 1px solid #333;
-        }
-        .btn-neutral:hover {
-            background-color: #555;
-        }
-        .fullscreen-frame {
-             height: 100vh !important;
-             position: fixed;
-             top: 0;
-             left: 0;
-             z-index: 1000;
-             margin: 0;
-             padding: 0;
-             width: 100vw !important; 
-        }
+        .btn-glow { transition: all 0.3s ease; }
+        .btn-glow:hover { box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.5); }
+        .btn-neutral { background-color: #333; color: white; border: 1px solid #333; }
+        .btn-neutral:hover { background-color: #555; }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8">
@@ -56,9 +58,8 @@
     <!-- Main Application UI -->
     <div id="main-ui" class="fade-in max-w-4xl mx-auto">
         <header class="text-center mb-6">
-            <h1 class="text-4xl font-extrabold text-neutral-900 tracking-tight">ig0 Proxx</h1>
-            <!-- Description is now blank as requested -->
-            <p class="text-neutral-600 mt-2"></p>
+            <h1 class="text-4xl font-extrabold text-neutral-900 tracking-tight">ig0 prox</h1>
+            <!-- Description removed as requested -->
         </header>
 
         <main class="bg-white p-6 md:p-8 rounded-xl shadow-xl space-y-6">
@@ -66,30 +67,18 @@
                 <label for="urlInput" class="block text-lg font-semibold text-neutral-800">Enter Target URL:</label>
                 <input type="url" id="urlInput" placeholder="e.g., https://www.google.com" required
                        class="w-full p-4 border border-neutral-300 rounded-lg focus:ring-neutral-500 focus:border-neutral-500 text-neutral-800 transition duration-150 ease-in-out"
-                       onkeydown="if(event.key === 'Enter') launchInBlank()">
+                       onkeydown="if(event.key === 'Enter') launchNewTab()">
             </div>
 
-            <!-- Action Buttons Row 1: The New Default is the Advanced Bypass -->
+            <!-- Action Buttons -->
             <div class="flex flex-col md:flex-row gap-4">
-                <button onclick="launchInBlank()" id="proxyButton"
+                <button onclick="launchNewTab()" id="proxyButton"
                         class="flex-1 p-4 font-bold rounded-lg shadow-lg focus:outline-none focus:ring-4 focus:ring-neutral-500 focus:ring-opacity-50 btn-glow transition duration-150 btn-neutral">
                     Go! (Launch in Blank Window)
                 </button>
-                <button onclick="startProxy()" id="loadFrameButton"
-                        class="p-4 bg-neutral-200 text-neutral-700 font-bold rounded-lg hover:bg-neutral-300 focus:outline-none focus:ring-4 focus:ring-neutral-400 focus:ring-opacity-50 transition duration-150">
-                    Load in Frame (Testing)
-                </button>
-            </div>
-
-            <!-- Action Buttons Row 2 -->
-            <div class="flex flex-col md:flex-row gap-4">
-                <button onclick="toggleFullscreen()" id="fullscreenButton"
-                        class="flex-1 p-3 bg-neutral-500 text-white font-bold rounded-lg hover:bg-neutral-600 transition duration-150">
-                    Toggle Frame Fullscreen
-                </button>
-                 <button onclick="clearFrame()" id="clearButton"
-                        class="flex-1 p-3 bg-neutral-500 text-white font-bold rounded-lg hover:bg-neutral-600 transition duration-150">
-                    Clear Frame
+                <button onclick="clearAllTabs()" id="clearButton"
+                        class="p-4 bg-red-500 text-white font-bold rounded-lg hover:bg-red-600 focus:outline-none focus:ring-4 focus:ring-red-400 focus:ring-opacity-50 transition duration-150">
+                    Close All Tabs
                 </button>
             </div>
             
@@ -100,24 +89,28 @@
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Loading content...
+                Launching tab...
             </div>
         </main>
     </div>
-
-    <!-- Content Frame Area (where the proxied website loads for testing) -->
-    <div id="frame-container" class="mt-8 hidden max-w-4xl mx-auto">
-        <!-- CRUCIAL: Initialize with about:blank to bypass simple iframe filters -->
-        <iframe id="contentFrame" title="Proxied Content" src="about:blank"></iframe>
+    
+    <!-- Tab Bar Container -->
+    <div class="max-w-4xl mx-auto mt-6">
+        <h2 class="text-lg font-semibold text-neutral-800 mb-2">Active Tabs:</h2>
+        <div id="tabBar" class="border-neutral-300">
+            <!-- Tab buttons will be injected here -->
+        </div>
     </div>
+
 
     <script>
         const urlInput = document.getElementById('urlInput');
         const messageBox = document.getElementById('messageBox');
         const loadingIndicator = document.getElementById('loadingIndicator');
-        const frameContainer = document.getElementById('frame-container');
-        const contentFrame = document.getElementById('contentFrame'); 
-        const mainUi = document.getElementById('main-ui');
+        const tabBar = document.getElementById('tabBar');
+        
+        // Tab state: Array of { id: string, name: string, windowRef: Window }
+        let activeTabs = [];
 
         // --- WORKER DEPLOYMENT CHANGE START ---
         const proxyBaseUrl = 'https://time.alansanti2248.workers.dev'; 
@@ -140,13 +133,73 @@
             return url;
         }
 
-        // Renamed/modified for clarity: Loads in the visible iframe on the current page
-        async function startProxy() {
+        // Renders the tab buttons based on the activeTabs array
+        function renderTabs() {
+            tabBar.innerHTML = '';
+            if (activeTabs.length === 0) {
+                 tabBar.innerHTML = '<p class="text-neutral-500 p-2">No active tabs.</p>';
+                 return;
+            }
+
+            activeTabs.forEach(tab => {
+                const tabButton = document.createElement('div');
+                tabButton.className = 'tab-button';
+                tabButton.onclick = () => switchTab(tab.id);
+                tabButton.innerHTML = `
+                    <span>${tab.name}</span>
+                    <span class="tab-close" onclick="event.stopPropagation(); closeTab('${tab.id}')">X</span>
+                `;
+                tabBar.appendChild(tabButton);
+            });
+        }
+        
+        // Brings a specific proxied window to the foreground
+        function switchTab(id) {
+            const tab = activeTabs.find(t => t.id === id);
+            if (tab && tab.windowRef && !tab.windowRef.closed) {
+                tab.windowRef.focus();
+                showMessage(`Switched to tab: ${tab.name}`, false);
+            } else if (tab) {
+                // If the user manually closed the window, clean up the tab button
+                closeTab(id);
+                showMessage(`Tab ${tab.name} was already closed and has been removed.`, true);
+            }
+        }
+
+        // Removes a tab from the array and closes its window
+        function closeTab(id) {
+            const index = activeTabs.findIndex(t => t.id === id);
+            if (index > -1) {
+                const tabToClose = activeTabs[index];
+                if (tabToClose.windowRef && !tabToClose.windowRef.closed) {
+                    tabToClose.windowRef.close();
+                }
+                activeTabs.splice(index, 1);
+                renderTabs();
+                showMessage(`Tab "${tabToClose.name}" closed.`, false);
+            }
+        }
+        
+        // Closes all tabs and their corresponding windows
+        function clearAllTabs() {
+            activeTabs.forEach(tab => {
+                if (tab.windowRef && !tab.windowRef.closed) {
+                    tab.windowRef.close();
+                }
+            });
+            activeTabs = [];
+            renderTabs();
+            showMessage("All tabs closed.", false);
+        }
+
+
+        // The core function: Opens in a clean, separate window and creates a new tab entry
+        function launchNewTab() {
             messageBox.classList.add('hidden');
             let url = urlInput.value.trim();
 
             if (!url) {
-                showMessage("Please enter a URL to proxy.", true);
+                showMessage("Please enter a URL to launch.", true);
                 return;
             }
             
@@ -156,74 +209,26 @@
             }
 
             url = normalizeUrl(url);
-
-            // Show loading
+            const proxyUrl = `${proxyBaseUrl}/?target=${encodeURIComponent(url)}`;
+            
             loadingIndicator.classList.remove('hidden');
+
+            const tabId = crypto.randomUUID();
+            const tabName = new URL(url).hostname;
             
-            // Construct the full URL using the deployed Worker URL
-            const proxyUrl = `${proxyBaseUrl}/?target=${encodeURIComponent(url)}`;
+            // Open the new window immediately
+            const newWindow = window.open('about:blank', tabId);
             
-            // Set the iframe source dynamically
-            contentFrame.src = proxyUrl;
-            frameContainer.classList.remove('hidden');
-
-            // Hide loading indicator once frame starts loading 
-            setTimeout(() => {
-                loadingIndicator.classList.add('hidden');
-            }, 1000); 
-
-            showMessage(`Attempting to load proxied URL in current frame: ${url}`, false);
-        }
-
-        // Function to clear the frame content
-        function clearFrame() {
-            contentFrame.src = "about:blank"; // Clears the content
-            frameContainer.classList.add('hidden');
-            contentFrame.classList.remove('fullscreen-frame');
-            mainUi.style.display = 'block'; // Ensure main UI is visible
-            urlInput.value = '';
-            messageBox.classList.add('hidden');
-            showMessage("Frame cleared. Ready for a new URL.", false);
-        }
-
-        // Function to toggle iframe fullscreen mode
-        function toggleFullscreen() {
-            if (frameContainer.classList.contains('hidden')) {
-                showMessage("Please load a URL before toggling fullscreen.", true);
-                return;
-            }
-
-            contentFrame.classList.toggle('fullscreen-frame');
-            
-            if (contentFrame.classList.contains('fullscreen-frame')) {
-                mainUi.style.display = 'none'; // Hide the main UI controls
-                showMessage("Fullscreen mode enabled.", false);
-            } else {
-                mainUi.style.display = 'block'; // Show the main UI controls
-                showMessage("Fullscreen mode disabled.", false);
-            }
-        }
-
-        // The most effective bypass method: Opens in a clean, separate window.
-        function launchInBlank() {
-            let url = urlInput.value.trim();
-
-            if (!url) {
-                showMessage("Please enter a URL to launch.", true);
-                return;
-            }
-            
-            url = normalizeUrl(url);
-            const proxyUrl = `${proxyBaseUrl}/?target=${encodeURIComponent(url)}`;
-            
-            const newWindow = window.open('about:blank', '_blank');
             if (newWindow) {
-                // We use a blank HTML structure and dynamically inject an iframe
-                // This keeps the proxy URL out of the original window's history/logs
+                // Add the new tab to the state immediately
+                activeTabs.push({ id: tabId, name: tabName, windowRef: newWindow });
+                renderTabs();
+
+                // Inject the proxy content into the new window
                 newWindow.document.write(`
                     <!DOCTYPE html>
                     <html style="margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%;">
-                    <head><title>Loading Proxy...</title></head>
+                    <head><title>Loading ${tabName}...</title></head>
                     <body style="margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%;">
                         <!-- iframe is now only inside the new, isolated window -->
                         <iframe src="${proxyUrl}" style="width: 100%; height: 100%; border: none; margin: 0; padding: 0;"></iframe>
@@ -231,12 +236,26 @@
                     </html>
                 `);
                 newWindow.document.close();
-                showMessage(`Launched in new window: ${url}`, false);
-                clearFrame(); 
+                
+                // Set a recurring check to clean up tabs if the window is closed manually
+                const cleanupInterval = setInterval(() => {
+                    if (newWindow.closed) {
+                        clearInterval(cleanupInterval);
+                        closeTab(tabId);
+                    }
+                }, 1000);
+
+                showMessage(`Successfully launched new tab for: ${tabName}`, false);
             } else {
                 showMessage("Could not open new window. Check your browser's pop-up blocker.", true);
             }
+            
+            loadingIndicator.classList.add('hidden');
+            urlInput.value = '';
         }
+        
+        // Initial render on load
+        window.onload = renderTabs;
     </script>
 </body>
 </html>
